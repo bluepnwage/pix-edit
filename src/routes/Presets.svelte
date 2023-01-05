@@ -1,80 +1,44 @@
 <script lang="ts">
-  import { downloadImage } from "$lib/download-image";
-  import { endpoint, presetName } from "$lib/cloudinary";
+  let loaded = 0;
 
-  import type { CloudinaryResponse } from "$lib/cloudinary";
-  import type { ImageFormats } from "$lib/download-image";
+  let src = "";
+  const fetchImage = async () => {
+    const res = await fetch(
+      "https://images.pexels.com/photos/1624487/pexels-photo-1624487.jpeg?auto=compress&cs=tinysrgb&w=1260&h=750&dpr=1"
+    );
+    const contentLength = res.headers.get("content-length");
+    console.log(contentLength);
+    const total = parseInt(contentLength as string);
 
-  type FormEvent<T extends Event, E extends Element> = T & { currentTarget: EventTarget & E };
-  type PresetSettings = {
-    name: string;
-    width: number;
-  };
-
-  let file: FileList;
-  let status: "idle" | "loading" | "success" = "idle";
-  let presets: PresetSettings[] = [
-    { width: 1200, name: "lg" },
-    { width: 800, name: "md" },
-    { width: 500, name: "sm" }
-  ];
-  let formats: ImageFormats[] = ["webp", "jpg"];
-
-  const onSubmit = async (e: FormEvent<SubmitEvent, HTMLFormElement>) => {
-    if (!file) return;
-    const fileName = file[0].name.split(".")[0];
-    status = "loading";
-    const formData = new FormData();
-    formData.append("file", file[0]);
-    formData.append("upload_preset", presetName);
-    const res = await fetch(endpoint, {
-      method: "POST",
-      body: formData
+    const stream = new ReadableStream({
+      start: async (controller) => {
+        const reader = res.body?.getReader();
+        await read();
+        async function read() {
+          const t = await reader?.read();
+          const length = t?.value?.byteLength || 0;
+          if (t?.done) {
+            controller.close();
+            return;
+          }
+          loaded += Math.round((length / total) * 100);
+          controller.enqueue(t?.value);
+          await read();
+        }
+      }
     });
-    if (res.ok) {
-      const json = (await res.json()) as CloudinaryResponse;
-      const promises = presets.map((preset) => {
-        return downloadImage(
-          json.public_id,
-          {
-            width: preset.width,
-            preset: preset.name,
-            imageName: fileName
-          },
-          formats
-        );
-      });
-
-      await Promise.all(promises);
-      status = "success";
-      setTimeout(() => (status = "idle"), 5000);
-    }
+    return new Response(stream);
+  };
+  const bruh = async () => {
+    const test = await fetchImage();
+    const blob = await test.blob();
+    const url = URL.createObjectURL(blob);
+    src = url;
   };
 </script>
 
-<form on:submit|preventDefault={onSubmit}>
-  <p>
-    <input
-      bind:files={file}
-      type="file"
-      name="preset_name"
-      id="preset_name"
-      class="border px-4 py-1 appearance-none outline-none"
-      required
-    />
-  </p>
+<button on:click={bruh}>Fetch image</button>
 
-  <button class="px-4 py-2 rounded-md bg-orange-600 text-white font-semibold">submit</button>
-</form>
-<p>
-  {#if status === "loading"}
-    Loading
-  {:else if status === "success"}
-    Image succesfully uploaded
-  {/if}
-</p>
-<p>All presets</p>
-{#each presets as preset (preset.name)}
-  <p>Name: {preset.name}</p>
-  <p>Width: {preset.width}</p>
-{/each}
+<p>Bytes loaded: {loaded}%</p>
+
+<img {src} alt={"Image"} />
