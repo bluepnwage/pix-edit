@@ -1,5 +1,5 @@
 <script lang="ts">
-  let dialogOpen = true;
+  let dialogOpen = false;
   let size: number = 0;
   let name = "";
   export let createPreset: (name: string, size: number) => void;
