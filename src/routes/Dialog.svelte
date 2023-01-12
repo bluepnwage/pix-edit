@@ -12,7 +12,7 @@
   };
 </script>
 
-<button class="px-4 py-2 rounded-md bg-orange-600 text-white font-semibold" on:click={() => (dialogOpen = true)}
+<button class="px-4 py-2 rounded-md bg-indigo-600 text-white font-semibold" on:click={() => (dialogOpen = true)}
   >Create preset</button
 >
 {#if dialogOpen}
