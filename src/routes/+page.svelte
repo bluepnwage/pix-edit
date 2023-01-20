@@ -1,4 +1,5 @@
 <script lang="ts">
+  import type { PageServerData } from "./$types";
   import Presets from "./Presets.svelte";
   import Dialog from "./Dialog.svelte";
   import { endpoint, presetName, type CloudinaryResponse } from "$lib/cloudinary";
@@ -11,7 +12,7 @@
     { name: "lg", size: 1200 }
   ];
 
-  let imageFormats: Record<ImageFormats, boolean> = { jpg: true, png: true, webp: true };
+  let imageFormats: Record<ImageFormats, boolean> = { jpg: true, png: false, webp: true };
   const createPreset = (name: string, size: number) => {
     if (presets.length === 3) {
       alert("You can only have 3 max presets");
@@ -74,6 +75,7 @@
   <meta name="description" content="Svelte demo app" />
 </svelte:head>
 <h1 class="text-5xl text-gray-900 text-center pt-10 mb-10">PixEdit</h1>
+
 <div class="flex justify-center ">
   <div class="p-5 border border-indigo-800 bg-white rounded-md space-y-4 ">
     <h2 class="font-bold text-xl text-center text-gray-900">Upload and transform images</h2>
