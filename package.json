@@ -32,6 +32,7 @@
   "type": "module",
   "dependencies": {
     "@cloudinary/url-gen": "^1.8.7",
-    "cloudinary": "^1.33.0"
+    "cloudinary": "^1.33.0",
+    "svelte-file-dropzone": "^1.0.0"
   }
 }

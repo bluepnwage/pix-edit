@@ -1,7 +1,7 @@
 <script lang="ts">
-  import type { PageServerData } from "./$types";
   import Presets from "./Presets.svelte";
   import Dialog from "./Dialog.svelte";
+  import Dropzone from "$lib/components/Dropzone.svelte";
   import { endpoint, presetName, type CloudinaryResponse } from "$lib/cloudinary";
   import { downloadImage, type ImageFormats } from "$lib/download-image";
   let presets: { name: string; size: number }[] = [];
@@ -68,14 +68,19 @@
       }
     }
   };
+  const createFiles = (data: FileList) => {
+    console.log(data);
+    files = data;
+    console.log(files);
+  };
 </script>
 
 <svelte:head>
   <title>PixEdit</title>
   <meta name="description" content="Svelte demo app" />
 </svelte:head>
+<Dropzone {createFiles} />
 <h1 class="text-5xl text-gray-900 text-center pt-10 mb-10">PixEdit</h1>
-
 <div class="flex justify-center ">
   <div class="p-5 border border-indigo-800 bg-white rounded-md space-y-4 ">
     <h2 class="font-bold text-xl text-center text-gray-900">Upload and transform images</h2>
