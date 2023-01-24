@@ -1,23 +1,23 @@
 <script lang="ts">
+  export let file: File | null;
+  export let onFileChange: (data: File | null) => void;
   let input: HTMLInputElement;
   type ElEvent<T extends Event, E extends Element> = T & { currentTarget: EventTarget & E };
   let dragged = false;
-  let error = false;
-  let files: File[] = [];
-  export let createFiles: (data: FileList) => void;
+
   const handleDrop = async (e: DragEvent) => {
     e.preventDefault();
-    console.log(e.dataTransfer?.files);
     if (e.dataTransfer?.files) {
-      createFiles(e.dataTransfer.files);
+      onFileChange(e.dataTransfer.files[0]);
     }
+    dragged = false;
   };
 
   const onDragOver = (e: ElEvent<DragEvent, HTMLDivElement>) => {
     e.preventDefault();
     dragged = true;
   };
-  const onDragEnter = (e: ElEvent<DragEvent, HTMLDivElement>) => {
+  const onDragEnter = () => {
     dragged = true;
   };
   const onDragLeave = () => {
@@ -27,31 +27,53 @@
   const onClick = async () => {
     input.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
   };
+
+  const onChange = (e: ElEvent<Event, HTMLInputElement>) => {
+    if (e.currentTarget.files) {
+      onFileChange(e.currentTarget.files[0]);
+    }
+  };
 </script>
 
-<div
-  tabindex="-1"
-  on:dragenter={onDragEnter}
-  on:dragleave={onDragLeave}
-  on:dragover={onDragOver}
-  on:drop={handleDrop}
-  class={`bg-zinc-200 rounded-md mx-auto flex flex-col items-center justify-center  border duration-200 ease-out border-zinc-400 border-dashed h-48 w-96 ${
-    dragged ? "bg-indigo-400" : ""
-  } ${error ? "bg-red-600/40" : ""}`}
->
-  <input bind:this={input} type="file" class="hidden" />
-  {#if error}
-    <p>Invalid file type</p>
-  {/if}
-  <p>Drag your photos here to start uploading</p>
-  <p class="text-lg">Or</p>
-  <button class="bg-indigo-600 text-white font-semibold px-2 py-1 rounded-sm" on:click={onClick}>Browse files</button>
-</div>
-<div>
-  {#if files}
-    {#each files as file}
-      <p>{file.name}</p>
-      <p />
-    {/each}
-  {/if}
+<div class="flex flex-col items-center ">
+  <p class="font-semibold">Upload file</p>
+
+  <div
+    tabindex="-1"
+    on:dragenter={onDragEnter}
+    on:dragleave={onDragLeave}
+    on:dragover={onDragOver}
+    on:drop={handleDrop}
+    class={` px-10 gap-2 py-4 rounded-md mx-auto flex items-center justify-center  border duration-200 ease-out border-zinc-400 border-dashed 
+     ${dragged ? "bg-zinc-200" : "bg-zinc-100"}`}
+  >
+    <input bind:this={input} on:change={onChange} type="file" class="hidden" />
+    {#if file}
+      <svg class="fill-indigo-600 scale-75" xmlns="http://www.w3.org/2000/svg" height="48" width="48"
+        ><path
+          d="M11 44q-1.2 0-2.1-.9Q8 42.2 8 41V7q0-1.2.9-2.1Q9.8 4 11 4h18.05L40 14.95V41q0 1.2-.9 2.1-.9.9-2.1.9Zm16.55-27.7V7H11v34h26V16.3ZM11 7v9.3V7v34V7Z"
+        /></svg
+      >
+      <div>
+        <p>{file.name}</p>
+        <p class="text-zinc-500">{Math.round(file.size / 1000)} KB</p>
+      </div>
+      <button on:click={() => onFileChange(null)} aria-label="Delete uploaded file">
+        <svg class="fill-zinc-600 scale-75 inline-block ml-10" xmlns="http://www.w3.org/2000/svg" height="48" width="48"
+          ><path
+            d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
+          /></svg
+        >
+      </button>
+    {:else}
+      <svg class="fill-indigo-600 scale-75" xmlns="http://www.w3.org/2000/svg" height="48" width="48"
+        ><path
+          d="M22.6 37.9h3V27.85l4.1 4.1 2.1-2.1-7.8-7.6-7.7 7.7 2.1 2.1 4.2-4.2ZM11 44q-1.2 0-2.1-.9Q8 42.2 8 41V7q0-1.2.9-2.1Q9.8 4 11 4h18.05L40 14.95V41q0 1.2-.9 2.1-.9.9-2.1.9Zm16.55-27.7V7H11v34h26V16.3ZM11 7v9.3V7v34V7Z"
+        /></svg
+      >
+      <p class="text-zinc-500">Drag and drop items here or</p>
+      <button class="font-semibold" on:click={onClick}>Browse files</button>
+    {/if}
+  </div>
+  <p class="text-zinc-500">Images must not be larger than 5MB.</p>
 </div>
