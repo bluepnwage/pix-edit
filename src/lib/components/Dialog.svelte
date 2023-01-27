@@ -12,8 +12,9 @@
   };
 </script>
 
-<button class="px-4 py-2 rounded-md bg-indigo-600 text-white font-semibold" on:click={() => (dialogOpen = true)}
-  >Create preset</button
+<button
+  class="px-2 relative active:top-[2px] py-1 rounded-lg bg-indigo-600 text-white font-semibold"
+  on:click={() => (dialogOpen = true)}>Create preset</button
 >
 {#if dialogOpen}
   <div
@@ -23,8 +24,18 @@
   >
     <div class="bg-white w-2/5 rounded-md p-5">
       <div class="flex justify-between">
-        <h2 class="font-bold text-3xl" id="dialog_title">Create preset</h2>
-        <button aria-label="Close modal" on:click={() => (dialogOpen = false)}>X</button>
+        <h2 class="font-bold text-3xl" id="dialog_title">Create new preset</h2>
+        <button
+          class="rounded-full hover:bg-gray-200 duration-200 ease-out"
+          aria-label="Close modal"
+          on:click={() => (dialogOpen = false)}
+        >
+          <svg xmlns="http://www.w3.org/2000/svg" class="scale-50 fill-gray-600" height="48" width="48"
+            ><path
+              d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
+            /></svg
+          >
+        </button>
       </div>
       <form class="space-y-2" on:submit|preventDefault={onSubmit}>
         <p>

@@ -1,5 +1,7 @@
 import { cloudinary } from "./cloudinary";
 import { Resize } from "@cloudinary/url-gen/actions";
+import { endpoint, presetName, type CloudinaryResponse } from "$lib/cloudinary";
+import type { Preset } from "./default-presets";
 
 export type ImageFormats = "webp" | "jpg" | "png";
 
@@ -9,7 +11,7 @@ type Config = {
   preset: string;
 };
 
-export async function downloadImage(publicID: string, config: Config, format: ImageFormats[]): Promise<void> {
+async function downloadImage(publicID: string, config: Config, format: ImageFormats[]): Promise<void> {
   if (format.length === 0) return;
   const [first, ...rest] = format;
   const image = cloudinary.image(publicID);
@@ -34,4 +36,44 @@ export async function downloadImage(publicID: string, config: Config, format: Im
     body: JSON.stringify({ id: publicID })
   });
   return downloadImage(publicID, config, rest);
+}
+
+type UploadOptions = {
+  selectedFormats: Record<ImageFormats, boolean>;
+  presets: Preset[];
+};
+
+export async function submitFiles(file: File | null, options: UploadOptions) {
+  if (!file) return;
+  const formats = Object.entries(options.selectedFormats)
+    .filter(([, value]) => value)
+    .map(([key]) => key) as ImageFormats[];
+  const fileName = file.name.split(".")[0];
+  const formData = new FormData();
+  formData.append("file", file);
+  formData.append("upload_preset", presetName);
+
+  const res = await fetch(endpoint, {
+    method: "POST",
+    body: formData
+  });
+  if (res.ok) {
+    const json = (await res.json()) as CloudinaryResponse;
+    let promises = [];
+
+    promises = options.presets.map((preset) => {
+      return downloadImage(
+        json.public_id,
+        {
+          width: preset.size,
+          preset: preset.name,
+          imageName: fileName
+        },
+        formats
+      );
+    });
+
+    await Promise.all(promises);
+    file = null;
+  }
 }
