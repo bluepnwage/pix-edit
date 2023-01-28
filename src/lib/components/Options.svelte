@@ -40,6 +40,9 @@
 
   const removePreset = (presetId: string) => {
     presets = presets.filter(({ id }) => id !== presetId);
+    if (localStorage.getItem("presets")) {
+      localStorage.setItem("presets", JSON.stringify({ presets }));
+    }
   };
 
   const onClick = async () => {
