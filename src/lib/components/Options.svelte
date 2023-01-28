@@ -1,10 +1,18 @@
 <script lang="ts">
   import Dropzone from "./Dropzone.svelte";
   import Dialog from "./Dialog.svelte";
+  import { onMount } from "svelte";
   import Preset from "./Preset.svelte";
   import { defaultPresets } from "$lib/default-presets";
   import { submitFiles } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
+
+  onMount(() => {
+    const savedPresets = localStorage.getItem("presets");
+    if (savedPresets) {
+      presets = JSON.parse(savedPresets).presets;
+    }
+  });
 
   let presets: PresetType[] = [];
   let loading = false;
@@ -26,6 +34,10 @@
     presets = [...presets, { name, size, id: crypto.randomUUID() }];
   };
 
+  const savePresets = () => {
+    localStorage.setItem("presets", JSON.stringify({ presets }));
+  };
+
   const removePreset = (presetId: string) => {
     presets = presets.filter(({ id }) => id !== presetId);
   };
@@ -39,7 +51,7 @@
 </script>
 
 <div class="flex justify-center text-gray-900 mb-10">
-  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
+  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 min-w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
     <fieldset>
       <legend class="text-xl font-semibold text-gray-900 mb-2">Format</legend>
@@ -59,7 +71,15 @@
           Custom presets
         {/if}
       </p>
-      <Dialog {createPreset} />
+      <Dialog {createPreset}>
+        {#if presets.length > 0}
+          <button
+            on:click={savePresets}
+            class="px-2 relative active:top-[2px] py-1 rounded-lg border border-emerald-600 text-emerald-600 font-semibold"
+            >Save presets</button
+          >
+        {/if}
+      </Dialog>
     </div>
     {#each currentPresets as preset (preset.id)}
       <Preset {preset}>

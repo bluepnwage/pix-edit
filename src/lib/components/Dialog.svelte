@@ -12,10 +12,13 @@
   };
 </script>
 
-<button
-  class="px-2 relative active:top-[2px] py-1 rounded-lg bg-indigo-600 text-white font-semibold"
-  on:click={() => (dialogOpen = true)}>Create preset</button
->
+<div>
+  <button
+    class="px-2 relative active:top-[2px] py-1 rounded-lg bg-indigo-600 text-white font-semibold"
+    on:click={() => (dialogOpen = true)}>Create preset</button
+  >
+  <slot />
+</div>
 {#if dialogOpen}
   <div
     aria-labelledby="dialog_title"
