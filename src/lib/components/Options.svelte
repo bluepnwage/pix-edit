@@ -1,11 +1,12 @@
 <script lang="ts">
   import Dropzone from "./Dropzone.svelte";
   import Dialog from "./Dialog.svelte";
+  import Preset from "./Preset.svelte";
   import { defaultPresets } from "$lib/default-presets";
   import { submitFiles } from "$lib/download-image";
-  import type { Preset } from "$lib/default-presets";
+  import type { Preset as PresetType } from "$lib/default-presets";
 
-  let presets: Preset[] = [];
+  let presets: PresetType[] = [];
   let loading = false;
   import type { ImageFormats } from "$lib/download-image";
   const imageFormats: ImageFormats[] = ["jpg", "png", "webp"];
@@ -22,7 +23,11 @@
     if (presets.length === 3) {
       alert("You can only have 3 max presets");
     }
-    presets = [...presets, { name, size }];
+    presets = [...presets, { name, size, id: crypto.randomUUID() }];
+  };
+
+  const removePreset = (presetId: string) => {
+    presets = presets.filter(({ id }) => id !== presetId);
   };
 
   const onClick = async () => {
@@ -56,13 +61,11 @@
       </p>
       <Dialog {createPreset} />
     </div>
-    {#each currentPresets as preset}
-      <div class="flex justify-between items-center mb-2 last-of-type:mb-0">
-        <p class="text-gray-900 font-semibold">
-          {preset.name}: <span class="font-normal text-gray-700">{preset.size}px</span>
-        </p>
+    {#each currentPresets as preset (preset.id)}
+      <Preset {preset}>
         {#if presets.length > 0}
           <button
+            on:click={() => removePreset(preset.id)}
             aria-label="Delete preset"
             class="bg-red-100 relative active:top-[2px] fill-red-800 rounded-md  flex justify-between items-center"
           >
@@ -79,7 +82,7 @@
             >
           </button>
         {/if}
-      </div>
+      </Preset>
     {/each}
     <hr class="w-full my-4 bg-gray-400 h-0.5" />
 
