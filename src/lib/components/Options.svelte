@@ -1,22 +1,16 @@
 <script lang="ts">
   import Dropzone from "./Dropzone.svelte";
   import Dialog from "./Dialog.svelte";
-  import { onMount } from "svelte";
   import Preset from "./Preset.svelte";
   import { defaultPresets } from "$lib/default-presets";
   import { submitFiles } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
-
-  onMount(() => {
-    const savedPresets = localStorage.getItem("presets");
-    if (savedPresets) {
-      presets = JSON.parse(savedPresets).presets;
-    }
-  });
-
-  let presets: PresetType[] = [];
-  let loading = false;
   import type { ImageFormats } from "$lib/download-image";
+
+  export let data: PresetType[];
+
+  let presets: PresetType[] = data;
+  let loading = false;
   const imageFormats: ImageFormats[] = ["jpg", "png", "webp"];
   let selectedFormats: Record<ImageFormats, boolean> = { jpg: true, png: false, webp: false };
   let file: File | null = null;
@@ -34,15 +28,27 @@
     presets = [...presets, { name, size, id: crypto.randomUUID() }];
   };
 
-  const savePresets = () => {
-    localStorage.setItem("presets", JSON.stringify({ presets }));
+  const savePresets = async () => {
+    const res = await fetch("/api/presets", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ presets })
+    });
+    if (res.ok) {
+      const text = await res.text();
+      console.log(text);
+    }
   };
 
   const removePreset = (presetId: string) => {
+    const endpoint = new URL("/api/presets", location.origin);
     presets = presets.filter(({ id }) => id !== presetId);
-    if (localStorage.getItem("presets")) {
-      localStorage.setItem("presets", JSON.stringify({ presets }));
-    }
+    if (presets.length === 0) endpoint.searchParams.set("delete", "1");
+    fetch(endpoint, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ presets })
+    });
   };
 
   const onClick = async () => {
