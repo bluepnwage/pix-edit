@@ -120,7 +120,7 @@
       disabled={loading || !file}
       on:click={onClick}
       data-loading={loading}
-      class="w-full py-1 disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
+      class="w-full py-1 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
       >Transform</button
     >
   </div>
