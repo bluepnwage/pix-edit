@@ -7,12 +7,13 @@
   import type { Preset as PresetType } from "$lib/default-presets";
   import type { ImageFormats } from "$lib/download-image";
 
-  export let data: PresetType[];
+  type Format = Record<ImageFormats, boolean>;
+  export let data: { presets: PresetType[]; formats: Format | null };
 
-  let presets: PresetType[] = data;
+  let presets: PresetType[] = data.presets;
   let loading = false;
   const imageFormats: ImageFormats[] = ["jpg", "png", "webp"];
-  let selectedFormats: Record<ImageFormats, boolean> = { jpg: true, png: false, webp: false };
+  let selectedFormats: Format = data.formats || { jpg: true, png: false, webp: false };
   let file: File | null = null;
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
@@ -33,6 +34,18 @@
       method: "POST",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ presets })
+    });
+    if (res.ok) {
+      const text = await res.text();
+      console.log(text);
+    }
+  };
+
+  const saveFormats = async () => {
+    const res = await fetch("/api/formats", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ formats: selectedFormats })
     });
     if (res.ok) {
       const text = await res.text();
@@ -62,15 +75,22 @@
 <div class="flex justify-center text-gray-900 mb-10">
   <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 min-w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
-    <fieldset>
-      <legend class="text-xl font-semibold text-gray-900 mb-2">Format</legend>
-      {#each imageFormats as format}
-        <p class="flex items-center gap-2 mb-4 last-of-type:mb-0">
-          <input id={format} type="checkbox" class="input" bind:checked={selectedFormats[format]} />
-          <label for={format} class="uppercase   text-gray-700">{format}</label>
-        </p>
-      {/each}
-    </fieldset>
+    <div class="flex justify-between items-start">
+      <fieldset>
+        <legend class="text-xl font-semibold text-gray-900 mb-2">Format</legend>
+        {#each imageFormats as format}
+          <p class="flex items-center gap-2 mb-4 last-of-type:mb-0">
+            <input id={format} type="checkbox" class="input" bind:checked={selectedFormats[format]} />
+            <label for={format} class="uppercase   text-gray-700">{format}</label>
+          </p>
+        {/each}
+      </fieldset>
+      <button
+        on:click={saveFormats}
+        class="px-2 relative active:top-[2px] py-1 rounded-lg border border-emerald-600 text-emerald-600 font-semibold"
+        >Save formats</button
+      >
+    </div>
     <hr class="w-full my-4 bg-gray-400 h-0.5" />
     <div class="flex justify-between mb-4">
       <p class="text-xl text-center font-semibold">
