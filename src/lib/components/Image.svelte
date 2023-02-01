@@ -21,6 +21,8 @@
     }
   }
 
+  const imageLabel = `${image.imageName}-${image.preset}-${format}`;
+
   const updateProgress = (data: number) => {
     progress += data;
   };
@@ -29,7 +31,9 @@
 <div>
   <div class="flex justify-between items-center">
     <div>
-      <p class="text-gray-800 text-lg">{image.imageName}-{image.preset}.{format}</p>
+      <p id={imageLabel} class="text-gray-800 text-lg">
+        {imageLabel}
+      </p>
     </div>
     <div class="flex">
       {#if url}
@@ -46,6 +50,9 @@
   </div>
   <div class="progress mb-4 bg-gray-300 border border-gray-400">
     <div
+      role="progressbar"
+      aria-labelledby={imageLabel}
+      aria-valuenow={progress}
       data-loading={loading}
       style="width: {loading ? '' : `${progress}%`}"
       class="progress-bar  progress-loading bg-indigo-600"

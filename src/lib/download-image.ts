@@ -1,7 +1,6 @@
 import { cloudinary } from "./cloudinary";
 import { Resize } from "@cloudinary/url-gen/actions";
 import { endpoint, presetName, type CloudinaryResponse } from "$lib/cloudinary";
-import type { Preset } from "./default-presets";
 
 export type ImageFormats = "webp" | "jpg" | "png";
 
