@@ -11,16 +11,39 @@ type Config = {
   preset: string;
 };
 
-export type DownloadData = { public_id: string; width: number; preset: string; imageName: string; url: string };
+export type DownloadData = { public_id: string; width: number; preset: string; imageName: string };
 
-export async function downloadImage(publicID: string, config: Config, format: ImageFormats) {
+export async function downloadImage(
+  publicID: string,
+  config: Config,
+  format: ImageFormats,
+  updateProgress: (data: number) => void
+) {
   const image = cloudinary.image(publicID);
   image.resize(Resize.scale().width(config.width));
   image.format(format);
 
   const res = await fetch(image.toURL());
+  const reader = res.body?.getReader()!;
+  const contentLength = parseInt(res.headers.get("content-length") || "0");
+  console.log(contentLength);
+  const stream = new ReadableStream<Uint8Array>({
+    start: async (controller) => {
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) {
+          controller.close();
+          break;
+        } else {
+          updateProgress((value.byteLength / contentLength) * 100);
+          controller.enqueue(value);
+        }
+      }
+    }
+  });
 
-  const blob = await res.blob();
+  const newRes = new Response(stream);
+  const blob = await newRes.blob();
   const url = URL.createObjectURL(blob);
 
   fetch("/api/delete-image", {
@@ -54,22 +77,14 @@ export async function submitFiles(file: File, options: UploadOptions) {
 
     const data: Record<ImageFormats, DownloadData[]> = { jpg: [], png: [], webp: [] };
     for (const format of formats) {
-      data[format] = await Promise.all(
-        options.presets.map(async (preset) => {
-          const url = await downloadImage(
-            json.public_id,
-            { preset: preset.name, imageName: fileName, width: preset.size },
-            format
-          );
-          return {
-            public_id: json.public_id,
-            width: preset.size,
-            preset: preset.name,
-            imageName: fileName,
-            url
-          };
-        })
-      );
+      data[format] = options.presets.map((preset) => {
+        return {
+          public_id: json.public_id,
+          width: preset.size,
+          preset: preset.name,
+          imageName: fileName
+        };
+      });
     }
 
     return data;

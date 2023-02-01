@@ -145,20 +145,20 @@
       disabled={loading || !file}
       on:click={onClick}
       data-loading={loading}
-      class="w-full py-1 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
+      class="w-full py-1  mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
       >Transform</button
     >
     {#if downloads.webp.length > 0}
       <p class="text-lg font-semibold text-gray-800">Webp</p>
     {/if}
     {#each downloads.webp as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} />
+      <Image {image} format="webp" />
     {/each}
     {#each downloads.jpg as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} />
+      <Image {image} format="jpg" />
     {/each}
     {#each downloads.png as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} />
+      <Image {image} format="png" />
     {/each}
   </div>
 </div>
