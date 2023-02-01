@@ -4,7 +4,7 @@
   import Preset from "./Preset.svelte";
   import Image from "./Image.svelte";
   import { defaultPresets } from "$lib/default-presets";
-  import { submitFiles } from "$lib/download-image";
+  import { uploadFile } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
   import type { ImageFormats, DownloadData } from "$lib/download-image";
 
@@ -19,6 +19,7 @@
   let selectedFormats: Format = data.formats || { jpg: true, png: false, webp: false };
   let file: File | null = null;
   let downloads: Downloads = { jpg: [], png: [], webp: [] };
+  let publicId = "";
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
 
@@ -68,10 +69,29 @@
     });
   };
 
+  const removeImage = (preset: string, format: ImageFormats) => {
+    downloads[format] = downloads[format].filter((value) => value.preset !== preset);
+  };
+
   const onClick = async () => {
     if (!file) return;
     loading = true;
-    downloads = await submitFiles(file, { selectedFormats, presets: currentPresets });
+
+    const fileName = file.name.split(".")[0];
+
+    const formats = Object.entries(selectedFormats)
+      .filter(([, value]) => value)
+      .map(([key]) => key) as ImageFormats[];
+    for (const format of formats) {
+      downloads[format] = currentPresets.map((preset) => {
+        return {
+          width: preset.size,
+          preset: preset.name,
+          imageName: fileName
+        };
+      });
+    }
+    publicId = await uploadFile(file);
     loading = false;
     file = null;
   };
@@ -151,14 +171,38 @@
     {#if downloads.webp.length > 0}
       <p class="text-lg font-semibold text-gray-800">Webp</p>
     {/if}
-    {#each downloads.webp as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} format="webp" />
+    {#each downloads.webp as image (`${image.imageName}-${image.preset}`)}
+      <Image {image} format="webp" {loading} {publicId}>
+        <button on:click={() => removeImage(image.preset, "webp")} class="relative active:top-[2px] scale-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+            ><path
+              d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
+            /></svg
+          >
+        </button>
+      </Image>
     {/each}
-    {#each downloads.jpg as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} format="jpg" />
+    {#each downloads.jpg as image (`${image.imageName}-${image.preset}`)}
+      <Image {image} format="jpg" {loading} {publicId}>
+        <button on:click={() => removeImage(image.preset, "jpg")} class="relative active:top-[2px] scale-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+            ><path
+              d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
+            /></svg
+          >
+        </button>
+      </Image>
     {/each}
-    {#each downloads.png as image (`${image.public_id}-${image.preset}`)}
-      <Image {image} format="png" />
+    {#each downloads.png as image (`${image.imageName}-${image.preset}`)}
+      <Image {image} format="png" {loading} {publicId}>
+        <button on:click={() => removeImage(image.preset, "png")} class="relative active:top-[2px] scale-50">
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+            ><path
+              d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
+            /></svg
+          >
+        </button>
+      </Image>
     {/each}
   </div>
 </div>

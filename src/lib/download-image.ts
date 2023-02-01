@@ -11,7 +11,11 @@ type Config = {
   preset: string;
 };
 
-export type DownloadData = { public_id: string; width: number; preset: string; imageName: string };
+export type DownloadData = {
+  width: number;
+  preset: string;
+  imageName: string;
+};
 
 export async function downloadImage(
   publicID: string,
@@ -54,41 +58,18 @@ export async function downloadImage(
   return url;
 }
 
-type UploadOptions = {
-  selectedFormats: Record<ImageFormats, boolean>;
-  presets: Preset[];
-};
-
-export async function submitFiles(file: File, options: UploadOptions) {
-  const formats = Object.entries(options.selectedFormats)
-    .filter(([, value]) => value)
-    .map(([key]) => key) as ImageFormats[];
-  const fileName = file.name.split(".")[0];
+export async function uploadFile(file: File) {
   const formData = new FormData();
   formData.append("file", file);
   formData.append("upload_preset", presetName);
-
   const res = await fetch(endpoint, {
     method: "POST",
     body: formData
   });
   if (res.ok) {
     const json = (await res.json()) as CloudinaryResponse;
-
-    const data: Record<ImageFormats, DownloadData[]> = { jpg: [], png: [], webp: [] };
-    for (const format of formats) {
-      data[format] = options.presets.map((preset) => {
-        return {
-          public_id: json.public_id,
-          width: preset.size,
-          preset: preset.name,
-          imageName: fileName
-        };
-      });
-    }
-
-    return data;
+    return json.public_id;
   } else {
-    throw new Error("An error occurred when uploading your images");
+    throw new Error("There was an error");
   }
 }
