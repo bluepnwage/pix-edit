@@ -45,8 +45,9 @@ export async function downloadImage(
       }
     }
   });
-
-  const newRes = new Response(stream);
+  const headers = new Headers();
+  headers.set("content-type", `image/${format}`);
+  const newRes = new Response(stream, { headers });
   const blob = await newRes.blob();
   const url = URL.createObjectURL(blob);
 
