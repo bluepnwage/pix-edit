@@ -6,7 +6,7 @@ export const POST = (async ({ request, cookies }) => {
 
   const data = json.presets.map((preset) => `${preset.name}-${preset.size}-${preset.id}`);
   const cookieData = data.join(",");
-  cookies.set("presets", cookieData, { path: "/" });
+  cookies.set("presets", cookieData, { path: "/", maxAge: 60 * 60 * 24 * 365 });
   return new Response("nice", { status: 200, headers: { "Content-Type": "application/json" } });
 }) satisfies RequestHandler;
 
