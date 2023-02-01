@@ -2,19 +2,23 @@
   import Dropzone from "./Dropzone.svelte";
   import Dialog from "./Dialog.svelte";
   import Preset from "./Preset.svelte";
+  import Image from "./Image.svelte";
   import { defaultPresets } from "$lib/default-presets";
   import { submitFiles } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
-  import type { ImageFormats } from "$lib/download-image";
+  import type { ImageFormats, DownloadData } from "$lib/download-image";
 
   type Format = Record<ImageFormats, boolean>;
   export let data: { presets: PresetType[]; formats: Format | null };
+
+  type Downloads = Record<ImageFormats, DownloadData[]>;
 
   let presets: PresetType[] = data.presets;
   let loading = false;
   const imageFormats: ImageFormats[] = ["jpg", "png", "webp"];
   let selectedFormats: Format = data.formats || { jpg: true, png: false, webp: false };
   let file: File | null = null;
+  let downloads: Downloads = { jpg: [], png: [], webp: [] };
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
 
@@ -65,8 +69,9 @@
   };
 
   const onClick = async () => {
+    if (!file) return;
     loading = true;
-    await submitFiles(file, { selectedFormats, presets: currentPresets });
+    downloads = await submitFiles(file, { selectedFormats, presets: currentPresets });
     loading = false;
     file = null;
   };
@@ -143,6 +148,18 @@
       class="w-full py-1 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
       >Transform</button
     >
+    {#if downloads.webp.length > 0}
+      <p class="text-lg font-semibold text-gray-800">Webp</p>
+    {/if}
+    {#each downloads.webp as image (`${image.public_id}-${image.preset}`)}
+      <Image {image} />
+    {/each}
+    {#each downloads.jpg as image (`${image.public_id}-${image.preset}`)}
+      <Image {image} />
+    {/each}
+    {#each downloads.png as image (`${image.public_id}-${image.preset}`)}
+      <Image {image} />
+    {/each}
   </div>
 </div>
 
