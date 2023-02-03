@@ -22,6 +22,11 @@
   let publicId = "";
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
+  $: {
+    if (file) {
+      downloads = { jpg: [], png: [], webp: [] };
+    }
+  }
 
   const onFileChange = (data: File | null) => {
     file = data;

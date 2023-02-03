@@ -48,6 +48,9 @@
       {/if}
     </div>
   </div>
+  <div class="flex justify-end pr-3">
+    <p class="text-gray-600">{progress}%</p>
+  </div>
   <div class="progress mb-4 bg-gray-300 border border-gray-400">
     <div
       role="progressbar"
