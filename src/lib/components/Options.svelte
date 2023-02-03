@@ -98,7 +98,7 @@
 </script>
 
 <div class="flex justify-center text-gray-900 mb-10">
-  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 min-w-2/6">
+  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
     <div class="flex justify-between items-start">
       <fieldset>
