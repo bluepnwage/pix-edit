@@ -1,4 +1,5 @@
 <script lang="ts">
+  import { fade, scale } from "svelte/transition";
   let dialogOpen = false;
   let size: number = 0;
   let name = "";
@@ -21,11 +22,12 @@
 </div>
 {#if dialogOpen}
   <div
+    transition:fade
     aria-labelledby="dialog_title"
     role="dialog"
     class="fixed  top-0 left-0 flex items-center justify-center bg-black/40 backdrop-blur-sm w-full h-screen z-[9999]"
   >
-    <div class="bg-white w-2/5 rounded-md p-5">
+    <div transition:scale={{ delay: 0.2 }} class="bg-white w-2/5 rounded-md p-5">
       <div class="flex justify-between">
         <h2 class="font-bold text-3xl" id="dialog_title">Create new preset</h2>
         <button

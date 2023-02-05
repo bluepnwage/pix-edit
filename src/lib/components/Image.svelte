@@ -50,7 +50,7 @@
     </div>
   </div>
   <div class="flex justify-end pr-3">
-    <p class="text-gray-600">{progress}%</p>
+    <p class="text-gray-600">{Math.floor(progress)}%</p>
   </div>
   <Progress {progress} {loading} {imageLabel} />
 </div>
