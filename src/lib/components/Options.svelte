@@ -4,7 +4,7 @@
   import Preset from "./Preset.svelte";
   import Image from "./Image.svelte";
   import { defaultPresets } from "$lib/default-presets";
-  import { uploadFile } from "$lib/download-image";
+  import { downloadImage, uploadFile, downloadGzip } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
   import type { ImageFormats, DownloadData } from "$lib/download-image";
 
@@ -20,6 +20,7 @@
   let file: File | null = null;
   let downloads: Downloads = { jpg: [], png: [], webp: [] };
   let publicId = "";
+  let progress = 0;
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
   $: {
@@ -100,8 +101,17 @@
     loading = false;
     file = null;
   };
+
+  const setProgress = (number: number) => {
+    progress += number;
+  };
+
+  const onZip = async () => {
+    await downloadGzip(publicId, downloads);
+  };
 </script>
 
+<button on:click={onZip} class="bg-emerald-500 text-white p-4">Download</button>
 <div class="flex justify-center text-gray-900 mb-10">
   <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>

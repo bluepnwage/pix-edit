@@ -1,6 +1,7 @@
 import { cloudinary } from "./cloudinary";
 import { Resize } from "@cloudinary/url-gen/actions";
 import { endpoint, presetName, type CloudinaryResponse } from "$lib/cloudinary";
+import type { Preset } from "./default-presets";
 
 export type ImageFormats = "webp" | "jpg" | "png";
 
@@ -71,5 +72,54 @@ export async function uploadFile(file: File) {
     return json.public_id;
   } else {
     throw new Error("There was an error");
+  }
+}
+
+export async function downloadGzip(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
+  const data = await Promise.all(
+    Object.entries(downloads).map(async ([key, value]) => {
+      const format = key as ImageFormats;
+      const test = await Promise.all(
+        value.map(async (d) => {
+          return {
+            name: `${d.imageName}-${d.preset}`,
+            url: await downloadImage(public_id, d, key as ImageFormats, () => {})
+          };
+        })
+      );
+      return { format, test };
+    })
+  );
+  const promises = await Promise.all(
+    data.map(async (t) => {
+      const d = await Promise.all(
+        t.test.map(async (g) => {
+          const res = await fetch(g.url);
+          const blob = await res.blob();
+          return { name: `${g.name}.${t.format}`, blob };
+        })
+      );
+      return d;
+    })
+  );
+  const arr = promises.flat();
+  const formData = new FormData();
+  arr.forEach((file) => {
+    formData.append("file", file.blob, file.name);
+  });
+  const res = await fetch("/api/gzip", {
+    method: "POST",
+    body: formData
+  });
+  if (res.ok) {
+    const blob = await res.blob();
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = "images.zip";
+    a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
+
+    setTimeout(() => URL.revokeObjectURL(url), 200);
+    console.log("nice");
   }
 }
