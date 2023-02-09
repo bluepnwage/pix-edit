@@ -14,15 +14,19 @@ export const POST = (async ({ request }) => {
       };
     })
   );
-  const stream = new Promise<ReadableStream<Uint8Array>>((resolve) => {
+  const stream = new Promise<ReadableStream<Uint8Array>>((resolve, reject) => {
     const myStream = new ReadableStream({
-      start: async (controller) => {
+      start: (controller) => {
         archive.on("data", (data) => {
           controller.enqueue(new Uint8Array(data));
         });
         archive.on("finish", () => {
           controller.close();
           resolve(myStream);
+        });
+        archive.on("error", (error) => {
+          controller.error(error);
+          reject(error);
         });
       }
     });

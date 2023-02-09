@@ -3,11 +3,12 @@
   import Dialog from "./Dialog.svelte";
   import Preset from "./Preset.svelte";
   import Image from "./Image.svelte";
+  import Notification from "./Notification.svelte";
   import { defaultPresets } from "$lib/default-presets";
-  import { downloadImage, uploadFile, downloadGzip } from "$lib/download-image";
+  import { uploadFile, downloadGzip } from "$lib/download-image";
+  import { dispatchNoti } from "$lib/notifications";
   import type { Preset as PresetType } from "$lib/default-presets";
   import type { ImageFormats, DownloadData } from "$lib/download-image";
-  import { webp } from "@cloudinary/url-gen/qualifiers/format";
 
   type Format = Record<ImageFormats, boolean>;
   export let data: { presets: PresetType[]; formats: Format | null };
@@ -49,7 +50,7 @@
     });
     if (res.ok) {
       const text = await res.text();
-      console.log(text);
+      dispatchNoti({ payload: text });
     }
   };
 
@@ -61,7 +62,7 @@
     });
     if (res.ok) {
       const text = await res.text();
-      console.log(text);
+      dispatchNoti({ payload: text });
     }
   };
 
@@ -108,6 +109,7 @@
   };
 </script>
 
+<Notification />
 <div class="flex justify-center text-gray-900 mb-10">
   <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
