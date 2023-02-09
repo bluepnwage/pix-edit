@@ -116,7 +116,7 @@ export async function downloadGzip(public_id: string, downloads: Record<ImageFor
     const url = URL.createObjectURL(blob);
     const a = document.createElement("a");
     a.href = url;
-    a.download = "images.zip";
+    a.download = `pix-edit-${crypto.randomUUID()}.zip`;
     a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 
     setTimeout(() => URL.revokeObjectURL(url), 200);

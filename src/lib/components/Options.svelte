@@ -103,10 +103,6 @@
     file = null;
   };
 
-  const setProgress = (number: number) => {
-    progress += number;
-  };
-
   const onZip = async () => {
     await downloadGzip(publicId, downloads);
   };
@@ -221,6 +217,8 @@
     {/each}
     {#if downloads.webp.length > 0 || downloads.jpg.length > 0 || downloads.png.length > 0}
       <button
+        disabled={loading}
+        data-loading={loading}
         on:click={onZip}
         class="w-full py-1  mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-emerald-600 inline-block mt-4 text-white"
         >Download as gzip</button
