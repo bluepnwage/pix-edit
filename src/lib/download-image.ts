@@ -76,35 +76,10 @@ export async function uploadFile(file: File) {
 }
 
 export async function downloadGzip(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
-  const data = await Promise.all(
-    Object.entries(downloads).map(async ([key, value]) => {
-      const format = key as ImageFormats;
-      const test = await Promise.all(
-        value.map(async (d) => {
-          return {
-            name: `${d.imageName}-${d.preset}`,
-            url: await downloadImage(public_id, d, key as ImageFormats, () => {})
-          };
-        })
-      );
-      return { format, test };
-    })
-  );
-  const promises = await Promise.all(
-    data.map(async (t) => {
-      const d = await Promise.all(
-        t.test.map(async (g) => {
-          const res = await fetch(g.url);
-          const blob = await res.blob();
-          return { name: `${g.name}.${t.format}`, blob };
-        })
-      );
-      return d;
-    })
-  );
-  const arr = promises.flat();
+  const images = await fetchBlobs(public_id, downloads);
+
   const formData = new FormData();
-  arr.forEach((file) => {
+  images.forEach((file) => {
     formData.append("file", file.blob, file.name);
   });
   const res = await fetch("/api/gzip", {
@@ -120,6 +95,39 @@ export async function downloadGzip(public_id: string, downloads: Record<ImageFor
     a.dispatchEvent(new MouseEvent("click", { bubbles: true, cancelable: true }));
 
     setTimeout(() => URL.revokeObjectURL(url), 200);
-    console.log("nice");
   }
+}
+
+async function fetchBlobs(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
+  const jpg = downloads.jpg.map((data) => {
+    return {
+      name: `${data.imageName}-${data.preset}.jpg`,
+      url: downloadImage(public_id, data, "jpg", () => {})
+    };
+  });
+  const png = downloads.png.map((data) => {
+    return {
+      name: `${data.imageName}-${data.preset}.png`,
+      url: downloadImage(public_id, data, "png", () => {})
+    };
+  });
+  const webp = downloads.webp.map((data) => {
+    return {
+      name: `${data.imageName}-${data.preset}.webp`,
+      url: downloadImage(public_id, data, "webp", () => {})
+    };
+  });
+  const downloadData = [...jpg, ...png, ...webp];
+  const images = await Promise.all(
+    downloadData.map(async (data) => {
+      const url = await data.url;
+      const res = await fetch(url);
+      return {
+        blob: await res.blob(),
+        name: data.name
+      };
+    })
+  );
+
+  return images;
 }
