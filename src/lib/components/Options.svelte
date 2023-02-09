@@ -7,6 +7,7 @@
   import { downloadImage, uploadFile, downloadGzip } from "$lib/download-image";
   import type { Preset as PresetType } from "$lib/default-presets";
   import type { ImageFormats, DownloadData } from "$lib/download-image";
+  import { webp } from "@cloudinary/url-gen/qualifiers/format";
 
   type Format = Record<ImageFormats, boolean>;
   export let data: { presets: PresetType[]; formats: Format | null };
@@ -111,7 +112,6 @@
   };
 </script>
 
-<button on:click={onZip} class="bg-emerald-500 text-white p-4">Download</button>
 <div class="flex justify-center text-gray-900 mb-10">
   <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
@@ -219,6 +219,13 @@
         </button>
       </Image>
     {/each}
+    {#if downloads.webp.length > 0 || downloads.jpg.length > 0 || downloads.png.length > 0}
+      <button
+        on:click={onZip}
+        class="w-full py-1  mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-emerald-600 inline-block mt-4 text-white"
+        >Download as gzip</button
+      >
+    {/if}
   </div>
 </div>
 
