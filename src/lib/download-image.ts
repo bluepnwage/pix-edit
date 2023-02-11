@@ -32,7 +32,7 @@ export async function downloadImage(
   const contentLength = parseInt(res.headers.get("content-length") || "0");
   console.log(contentLength);
   const stream = new ReadableStream<Uint8Array>({
-    start: async (controller) => {
+    start: async controller => {
       while (true) {
         const { done, value } = await reader.read();
         if (done) {
@@ -46,7 +46,7 @@ export async function downloadImage(
     }
   });
   const headers = new Headers();
-  headers.set("content-type", `image/${format}`);
+  headers.set("content-type", `image/${format === "jpg" ? "jpeg" : format}`);
   const newRes = new Response(stream, { headers });
   const blob = await newRes.blob();
   const url = URL.createObjectURL(blob);
@@ -79,7 +79,7 @@ export async function downloadGzip(public_id: string, downloads: Record<ImageFor
   const images = await fetchBlobs(public_id, downloads);
 
   const formData = new FormData();
-  images.forEach((file) => {
+  images.forEach(file => {
     formData.append("file", file.blob, file.name);
   });
   const res = await fetch("/api/gzip", {
@@ -99,19 +99,19 @@ export async function downloadGzip(public_id: string, downloads: Record<ImageFor
 }
 
 async function fetchBlobs(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
-  const jpg = downloads.jpg.map((data) => {
+  const jpg = downloads.jpg.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.jpg`,
       url: downloadImage(public_id, data, "jpg", () => {})
     };
   });
-  const png = downloads.png.map((data) => {
+  const png = downloads.png.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.png`,
       url: downloadImage(public_id, data, "png", () => {})
     };
   });
-  const webp = downloads.webp.map((data) => {
+  const webp = downloads.webp.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.webp`,
       url: downloadImage(public_id, data, "webp", () => {})
@@ -119,7 +119,7 @@ async function fetchBlobs(public_id: string, downloads: Record<ImageFormats, Dow
   });
   const downloadData = [...jpg, ...png, ...webp];
   const images = await Promise.all(
-    downloadData.map(async (data) => {
+    downloadData.map(async data => {
       const url = await data.url;
       const res = await fetch(url);
       return {
