@@ -25,7 +25,7 @@
     transition:fade
     aria-labelledby="dialog_title"
     role="dialog"
-    class="fixed  top-0 left-0 flex items-center justify-center bg-black/40 backdrop-blur-sm w-full h-screen z-[9999]"
+    class="fixed top-0 left-0 flex items-center justify-center bg-black/40 backdrop-blur-sm w-full h-screen z-[9999]"
   >
     <div transition:scale={{ delay: 0.2 }} class="bg-white w-2/5 rounded-md p-5">
       <div class="flex justify-between">
@@ -58,7 +58,6 @@
           <input
             bind:value={size}
             id="preset_size"
-            max="1500"
             name="preset_size"
             type="number"
             class="border w-full px-2 appearance-none outline-none border-zinc-300 py-1 rounded-sm"

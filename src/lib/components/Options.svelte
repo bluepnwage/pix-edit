@@ -19,20 +19,18 @@
   let loading = false;
   const imageFormats: ImageFormats[] = ["jpg", "png", "webp"];
   let selectedFormats: Format = data.formats || { jpg: true, png: false, webp: false };
-  let file: File | null = null;
+  let files: File[] = [];
   let downloads: Downloads = { jpg: [], png: [], webp: [] };
-  let publicId = "";
-  let progress = 0;
 
   $: currentPresets = presets.length > 0 ? presets : defaultPresets;
   $: {
-    if (file) {
+    if (files.length > 0) {
       downloads = { jpg: [], png: [], webp: [] };
     }
   }
 
-  const onFileChange = (data: File | null) => {
-    file = data;
+  const onFileChange = (data: File[]) => {
+    files = data;
   };
 
   const createPreset = (name: string, size: number) => {
@@ -40,6 +38,10 @@
       alert("You can only have 3 max presets");
     }
     presets = [...presets, { name, size, id: crypto.randomUUID() }];
+  };
+
+  const onFileFilter = (name: string) => {
+    files = files.filter(file => file.name !== name);
   };
 
   const savePresets = async () => {
@@ -78,40 +80,45 @@
   };
 
   const removeImage = (preset: string, format: ImageFormats) => {
-    downloads[format] = downloads[format].filter((value) => value.preset !== preset);
+    downloads[format] = downloads[format].filter(value => value.preset !== preset);
   };
 
   const onClick = async () => {
-    if (!file) return;
+    if (files.length === 0) return;
     loading = true;
+    for (const file of files) {
+      const fileName = file.name.split(".")[0];
 
-    const fileName = file.name.split(".")[0];
-
-    const formats = Object.entries(selectedFormats)
-      .filter(([, value]) => value)
-      .map(([key]) => key) as ImageFormats[];
-    for (const format of formats) {
-      downloads[format] = currentPresets.map((preset) => {
-        return {
-          width: preset.size,
-          preset: preset.name,
-          imageName: fileName
-        };
-      });
+      const formats = Object.entries(selectedFormats)
+        .filter(([, value]) => value)
+        .map(([key]) => key) as ImageFormats[];
+      for (const format of formats) {
+        const publicId = await uploadFile(file);
+        downloads[format] = [
+          ...downloads[format],
+          ...currentPresets.map(preset => {
+            return {
+              width: preset.size,
+              preset: preset.name,
+              imageName: fileName,
+              publicId
+            };
+          })
+        ];
+      }
     }
-    publicId = await uploadFile(file);
     loading = false;
-    file = null;
+    files = [];
   };
 
   const onZip = async () => {
-    await downloadGzip(publicId, downloads);
+    await downloadGzip(downloads);
   };
 </script>
 
 <Notification />
 <div class="flex justify-center text-gray-900 mb-10">
-  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10  p-4 w-2/6">
+  <div class="rounded-md shadow-lg ring-1 bg-white ring-black/10 p-4 w-2/6">
     <p class="text-2xl text-center font-bold">Options</p>
     <div class="flex justify-between items-start">
       <fieldset>
@@ -119,7 +126,7 @@
         {#each imageFormats as format}
           <p class="flex items-center gap-2 mb-4 last-of-type:mb-0">
             <input id={format} type="checkbox" class="input" bind:checked={selectedFormats[format]} />
-            <label for={format} class="uppercase   text-gray-700">{format}</label>
+            <label for={format} class="uppercase text-gray-700">{format}</label>
           </p>
         {/each}
       </fieldset>
@@ -154,7 +161,7 @@
           <button
             on:click={() => removePreset(preset.id)}
             aria-label="Delete preset"
-            class="bg-red-100 relative active:top-[2px] fill-red-800 rounded-md  flex justify-between items-center"
+            class="bg-red-100 relative active:top-[2px] fill-red-800 rounded-md flex justify-between items-center"
           >
             <svg
               aria-hidden="true"
@@ -173,21 +180,21 @@
     {/each}
     <hr class="w-full my-4 bg-gray-400 h-0.5" />
 
-    <Dropzone {onFileChange} {file} />
+    <Dropzone {onFileChange} {files} {onFileFilter} />
     <button
-      disabled={loading || !file}
+      disabled={loading || files.length === 0}
       on:click={onClick}
       data-loading={loading}
-      class="w-full py-1  mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
+      class="w-full py-1 mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-indigo-600 inline-block mt-4 text-white"
       >Transform</button
     >
     {#if downloads.webp.length > 0}
       <p class="text-lg font-semibold text-gray-800">Webp</p>
     {/if}
     {#each downloads.webp as image (`${image.imageName}-${image.preset}`)}
-      <Image {image} format="webp" {loading} {publicId}>
+      <Image {image} format="webp" {loading}>
         <button on:click={() => removeImage(image.preset, "webp")} class="relative active:top-[2px] scale-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700" height="48" width="48"
             ><path
               d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
             /></svg
@@ -196,9 +203,9 @@
       </Image>
     {/each}
     {#each downloads.jpg as image (`${image.imageName}-${image.preset}`)}
-      <Image {image} format="jpg" {loading} {publicId}>
+      <Image {image} format="jpg" {loading}>
         <button on:click={() => removeImage(image.preset, "jpg")} class="relative active:top-[2px] scale-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700" height="48" width="48"
             ><path
               d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
             /></svg
@@ -207,9 +214,9 @@
       </Image>
     {/each}
     {#each downloads.png as image (`${image.imageName}-${image.preset}`)}
-      <Image {image} format="png" {loading} {publicId}>
+      <Image {image} format="png" {loading}>
         <button on:click={() => removeImage(image.preset, "png")} class="relative active:top-[2px] scale-50">
-          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700 " height="48" width="48"
+          <svg xmlns="http://www.w3.org/2000/svg" class="fill-gray-700" height="48" width="48"
             ><path
               d="m12.45 37.65-2.1-2.1L21.9 24 10.35 12.45l2.1-2.1L24 21.9l11.55-11.55 2.1 2.1L26.1 24l11.55 11.55-2.1 2.1L24 26.1Z"
             /></svg
@@ -222,7 +229,7 @@
         disabled={loading}
         data-loading={loading}
         on:click={onZip}
-        class="w-full py-1  mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-emerald-600 inline-block mt-4 text-white"
+        class="w-full py-1 mb-4 disabled:static disabled:grayscale data-[loading=true]:animate-pulse active:top-[2px] relative font-semibold rounded-lg bg-emerald-600 inline-block mt-4 text-white"
         >Download as gzip</button
       >
     {/if}

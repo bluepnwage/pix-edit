@@ -15,6 +15,7 @@ export type DownloadData = {
   width: number;
   preset: string;
   imageName: string;
+  publicId: string;
 };
 
 export async function downloadImage(
@@ -30,7 +31,6 @@ export async function downloadImage(
   const res = await fetch(image.toURL());
   const reader = res.body?.getReader()!;
   const contentLength = parseInt(res.headers.get("content-length") || "0");
-  console.log(contentLength);
   const stream = new ReadableStream<Uint8Array>({
     start: async controller => {
       while (true) {
@@ -75,8 +75,8 @@ export async function uploadFile(file: File) {
   }
 }
 
-export async function downloadGzip(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
-  const images = await fetchBlobs(public_id, downloads);
+export async function downloadGzip(downloads: Record<ImageFormats, DownloadData[]>) {
+  const images = await fetchBlobs(downloads);
 
   const formData = new FormData();
   images.forEach(file => {
@@ -98,23 +98,23 @@ export async function downloadGzip(public_id: string, downloads: Record<ImageFor
   }
 }
 
-async function fetchBlobs(public_id: string, downloads: Record<ImageFormats, DownloadData[]>) {
+async function fetchBlobs(downloads: Record<ImageFormats, DownloadData[]>) {
   const jpg = downloads.jpg.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.jpg`,
-      url: downloadImage(public_id, data, "jpg", () => {})
+      url: downloadImage(data.publicId, data, "jpg", () => {})
     };
   });
   const png = downloads.png.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.png`,
-      url: downloadImage(public_id, data, "png", () => {})
+      url: downloadImage(data.publicId, data, "png", () => {})
     };
   });
   const webp = downloads.webp.map(data => {
     return {
       name: `${data.imageName}-${data.preset}.webp`,
-      url: downloadImage(public_id, data, "webp", () => {})
+      url: downloadImage(data.publicId, data, "webp", () => {})
     };
   });
   const downloadData = [...jpg, ...png, ...webp];
